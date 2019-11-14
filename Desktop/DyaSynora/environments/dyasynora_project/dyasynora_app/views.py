@@ -1,14 +1,67 @@
-from django.http import Http404
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
-from django.template import loader
+from django.shortcuts import render
 from django.http import HttpResponse
-
-from django.http import QueryDict
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from .models import Project
 from .models import Activity
+
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+def home(request):
+    context = {
+        'projects': Project.objects.all() # Query data from DB
+    }
+    return render(request, 'dyasynora_app/diasynora.html', context)
+
+class PostListView(ListView):
+    model = Project
+    template_name = 'dyasynora_app/feed.html'
+    context_object_name = 'projects'
+    ordering = ['-date_created']
+
+class PostDetailView(DetailView):
+    model = Project
+
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Project
+    fields = ['name', 'description', 'image']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Project
+    fields = ['name', 'description', 'image']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def test_func(self):
+        project = self.get_object()
+        if self.request.user == project.author:
+            return True
+        return False
+
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Project
+    success_url = '/'
+
+    def test_func(self):
+        project = self.get_object()
+        if self.request.user == project.author:
+            return True
+        return False
+
+def our_mission(request):
+    return render(request, 'dyasynora_app/our-mission.html', {'title': 'DiaSynora'})
+
+def login(request):
+    return render(request, 'dyasynora_app/login.html')
+
+def register(request):
+    return render(request, 'dyasynora_app/register.html')
 
 def projects(request):
     latest_project_list = Project.objects.order_by('-date_created')[:5]
@@ -18,7 +71,7 @@ def projects(request):
 def detail(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     return render(request, 'dyasynora_app/detail.html', {'project': project})
-
+"""
 def activity(request, project_id):
     response = "You're looking at an activity of project %s."
     return HttpResponse(response % project_id)
@@ -86,3 +139,4 @@ def update_project(request, id):
 			'project_cost': updated_project.project_cost
         }
         return JsonResponse(response, safe= False)
+"""

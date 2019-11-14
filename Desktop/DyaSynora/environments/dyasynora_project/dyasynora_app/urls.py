@@ -1,15 +1,13 @@
 from django.urls import path
-from django.http import JsonResponse
-from dyasynora_app import views
+from . import views
+from .views import PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView
 
-app_name = 'dyasynora_app'
 urlpatterns = [
-    path('', views.projects, name='projects'),
-    path('<int:project_id>/', views.detail, name='detail'),
-    path('projects.json', views.projects_json, name='list of projects'),
-    path('activities.json', views.activities_json, name='list of activities'),
-    path('new_project/', views.new_project, name='new project'),
-    path('new_activity/', views.new_activity, name='new activity'),
-    path('delete_project/<int:id>', views.delete_project, name='delete project'),
-    path('update_project/<int:id>', views.update_project, name='update'),
+    path('', views.home, name='dyasynora_app-diasynora'),
+    path('feed/', PostListView.as_view(), name='dyasynora_app-feed'),
+    path('project/<int:pk>/', PostDetailView.as_view(), name='dyasynora_app-project-detail'),
+    path('project/new/', PostCreateView.as_view(), name='dyasynora_app-project-create'),
+    path('project/<int:pk>/update/', PostUpdateView.as_view(), name='dyasynora_app-project-update'),
+    path('project/<int:pk>/delete/', PostDeleteView.as_view(), name='dyasynora_app-project-delete'),
+    path('our-mission/', views.our_mission, name='dyasynora_app-our-mission'),
 ]
